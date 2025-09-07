@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/logisticsdb # Обрати внимание на 'postgres' вместо 'localhost'!
+    username: admin
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # В начале разработки можно использовать такую настройку. Она автоматически создает и удаляет таблицы по описанным сущностям.
+    show-sql: true           # Показывает SQL-запросы в логах. Очень полезно для отладки!
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    com.logisticsos: DEBUG
