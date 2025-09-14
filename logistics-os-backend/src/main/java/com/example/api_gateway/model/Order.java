@@ -3,6 +3,7 @@ package com.example.api_gateway.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "orders")
@@ -41,6 +42,12 @@ public class Order {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(name = "duration_time")
+    private int durationTime;
+
+    @Column(name = "completedAt")
+    private LocalDateTime completedAt = LocalDateTime.now();
 
     public Order() {
     }
@@ -146,5 +153,22 @@ public class Order {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public int getDurationTime() {
+        return durationTime;
+    }
+
+    public void setDurationTime(int durationTime) {
+        this.durationTime = durationTime;
+    }
+
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }
