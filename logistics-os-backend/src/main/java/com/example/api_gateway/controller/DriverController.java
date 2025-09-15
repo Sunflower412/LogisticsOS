@@ -22,6 +22,7 @@ public class DriverController {
         return driverRepository.findAll();
     }
 
+
     @PostMapping
     public Driver createDriver(@RequestBody Driver driver){
         return driverRepository.save(driver);

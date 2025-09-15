@@ -3,6 +3,7 @@ package com.example.api_gateway.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "orders")
@@ -26,15 +27,6 @@ public class Order {
     @Column(name = "volume_m3")
     private Double volumeM3;
 
-    @Column(name = "planned_delivery_time")
-    private LocalDateTime plannedDeliveryTime;
-
-    @Column(name = "actual_delivery_time")
-    private LocalDateTime actualDeliveryTime;
-
-    @Column(name = "completed_successfully")
-    private Boolean completedSuccessfully;
-
     private String status = "CREATED";
 
     @ManyToOne
@@ -50,6 +42,12 @@ public class Order {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(name = "duration_time")
+    private int durationTime;
+
+    @Column(name = "completedAt")
+    private LocalDateTime completedAt = LocalDateTime.now();
 
     public Order() {
     }
@@ -157,27 +155,20 @@ public class Order {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getPlannedDeliveryTime() {
-        return plannedDeliveryTime;
+    public int getDurationTime() {
+        return durationTime;
     }
 
-    public void setPlannedDeliveryTime(LocalDateTime plannedDeliveryTime) {
-        this.plannedDeliveryTime = plannedDeliveryTime;
+    public void setDurationTime(int durationTime) {
+        this.durationTime = durationTime;
     }
 
-    public LocalDateTime getActualDeliveryTime() {
-        return actualDeliveryTime;
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
     }
 
-    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
-        this.actualDeliveryTime = actualDeliveryTime;
-    }
-
-    public Boolean getCompletedSuccessfully() {
-        return completedSuccessfully;
-    }
-
-    public void setCompletedSuccessfully(Boolean completedSuccessfully) {
-        this.completedSuccessfully = completedSuccessfully;
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }
