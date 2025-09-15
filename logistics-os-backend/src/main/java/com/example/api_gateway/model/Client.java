@@ -19,6 +19,10 @@ public class Client {
     @Column(name = "contact_person")
     private String contactPerson;
 
+    @Column(name = "delivery_time_window")
+    private String deliveryTimeWindow;
+
+
     private String phone;
 
     private String address;
@@ -28,7 +32,7 @@ public class Client {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private List<Order> orders = new ArrayList<>();
 
-    public Client(long id, String companyName, String contactPerson, String phone, String address, int priority, List<Order> orders) {
+    public Client(long id, String companyName, String contactPerson, String deliveryTimeWindow, String phone, String address, int priority, List<Order> orders) {
         this.id = id;
         this.companyName = companyName;
         this.contactPerson = contactPerson;
@@ -36,6 +40,7 @@ public class Client {
         this.address = address;
         this.priority = priority;
         this.orders = orders;
+        this.deliveryTimeWindow = deliveryTimeWindow;
     }
 
     public Client() {}
@@ -94,5 +99,13 @@ public class Client {
 
     public void setOrders(List<Order> orders) {
         this.orders = orders;
+    }
+
+    public String getDeliveryTimeWindow() {
+        return deliveryTimeWindow;
+    }
+
+    public void setDeliveryTimeWindow(String deliveryTimeWindow) {
+        this.deliveryTimeWindow = deliveryTimeWindow;
     }
 }
