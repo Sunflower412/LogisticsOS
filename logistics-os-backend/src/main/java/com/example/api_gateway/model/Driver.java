@@ -18,6 +18,8 @@ public class Driver {
     @Column(name = "experience_level")
     int experienceLevel;
 
+
+
     public Driver() {}
 
     public Driver(Long id, String firstname, String lastName, int experienceLevel) {

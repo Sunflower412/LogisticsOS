@@ -26,6 +26,15 @@ public class Order {
     @Column(name = "volume_m3")
     private Double volumeM3;
 
+    @Column(name = "planned_delivery_time")
+    private LocalDateTime plannedDeliveryTime;
+
+    @Column(name = "actual_delivery_time")
+    private LocalDateTime actualDeliveryTime;
+
+    @Column(name = "completed_successfully")
+    private Boolean completedSuccessfully;
+
     private String status = "CREATED";
 
     @ManyToOne
@@ -146,5 +155,29 @@ public class Order {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getPlannedDeliveryTime() {
+        return plannedDeliveryTime;
+    }
+
+    public void setPlannedDeliveryTime(LocalDateTime plannedDeliveryTime) {
+        this.plannedDeliveryTime = plannedDeliveryTime;
+    }
+
+    public LocalDateTime getActualDeliveryTime() {
+        return actualDeliveryTime;
+    }
+
+    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
+        this.actualDeliveryTime = actualDeliveryTime;
+    }
+
+    public Boolean getCompletedSuccessfully() {
+        return completedSuccessfully;
+    }
+
+    public void setCompletedSuccessfully(Boolean completedSuccessfully) {
+        this.completedSuccessfully = completedSuccessfully;
     }
 }
