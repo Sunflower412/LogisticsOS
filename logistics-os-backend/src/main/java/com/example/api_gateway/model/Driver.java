@@ -23,10 +23,10 @@ public class Driver {
     int experienceLevel;
 
     @Column(name = "experience_coefficient_perMonth")
-    private float experience_coefficient_perMonth = 1;
+    private BigDecimal experienceCoefficientPerMonth = BigDecimal.ONE;
 
     @Column(name = "experience_coefficient_allTime")
-    private float experience_coefficient_allTime = 1;
+    private BigDecimal experienceCoefficientAllTime = BigDecimal.ONE;
 
     @OneToMany
     @Column(name = "orders")
@@ -49,17 +49,10 @@ public class Driver {
         this.firstname = firstname;
         this.lastName = lastName;
         this.experienceLevel = experienceLevel;
+        this.experienceCoefficientPerMonth = BigDecimal.ONE;
+        this.experienceCoefficientAllTime = BigDecimal.ONE;
     }
 
-    public void updateCoefficientByCompletedOrder(int id){
-        Order completedOrder = findOrderById(id);
-        if ((completedOrder.getCompletedAt().getMinute() - completedOrder.getCreatedAt().getMinute()) >= completedOrder.getDurationTime()){
-            experience_coefficient_perMonth = experience_coefficient_perMonth + 0.01f;
-        }
-        else {
-            experience_coefficient_perMonth = experience_coefficient_perMonth - 0.05f;
-        }
-    }
 
     public Long getId() {
         return id;
@@ -103,19 +96,56 @@ public class Driver {
         this.orders = orders;
     }
 
-    public float getExperience_coefficient_perMonth() {
-        return experience_coefficient_perMonth;
+
+    public BigDecimal getExperience_coefficient_perMonth() {
+        return experienceCoefficientPerMonth;
     }
 
-    public void setExperience_coefficient_perMonth(float experience_coefficient_perMonth) {
-        this.experience_coefficient_perMonth = experience_coefficient_perMonth;
+    public void setExperience_coefficient_perMonth(BigDecimal experience_coefficient_perMonth) {
+        this.experienceCoefficientPerMonth = experience_coefficient_perMonth;
     }
 
-    public float getExperience_coefficient_allTime() {
-        return experience_coefficient_allTime;
+    public BigDecimal getExperience_coefficient_allTime() {
+        return experienceCoefficientAllTime;
     }
 
-    public void setExperience_coefficient_allTime(float experience_coefficient_allTime) {
-        this.experience_coefficient_allTime = experience_coefficient_allTime;
+    public void setExperience_coefficient_allTime(BigDecimal experience_coefficient_allTime) {
+        this.experienceCoefficientAllTime = experience_coefficient_allTime;
+    }
+    public void applyRatingChange(BigDecimal change) {
+        this.experienceCoefficientPerMonth = this.experienceCoefficientPerMonth.add(change);
+        this.experienceCoefficientAllTime = this.experienceCoefficientAllTime.add(change);
+        applyRatingLimits();
+    }
+
+    private void applyRatingLimits() {
+        // Ограничения снизу
+        if (experienceCoefficientPerMonth.compareTo(new BigDecimal("2.5")) < 0) {
+            experienceCoefficientPerMonth = new BigDecimal("2.5");
+        }
+        if (experienceCoefficientAllTime.compareTo(new BigDecimal("2.5")) < 0) {
+            experienceCoefficientAllTime = new BigDecimal("2.5");
+        }
+
+        // Ограничения сверху
+        if (experienceCoefficientPerMonth.compareTo(new BigDecimal("5.0")) > 0) {
+            experienceCoefficientPerMonth = new BigDecimal("5.0");
+        }
+        if (experienceCoefficientAllTime.compareTo(new BigDecimal("5.0")) > 0) {
+            experienceCoefficientAllTime = new BigDecimal("5.0");
+        }
+    }
+
+
+    @Override
+    public String toString() {
+        return "Driver{" +
+                "id=" + id +
+                ", firstName='" + firstname + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", experienceLevel=" + experienceLevel +
+                ", experienceCoefficientPerMonth=" + experienceCoefficientPerMonth +
+                ", experienceCoefficientAllTime=" + experienceCoefficientAllTime +
+                '}';
     }
 }
