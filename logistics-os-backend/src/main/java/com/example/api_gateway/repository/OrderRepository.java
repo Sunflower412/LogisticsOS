@@ -22,4 +22,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o WHERE o.driver.id = :driverId AND o.status = 'DELIVERED'")
     List<Order> findCompletedOrdersByDriver(@Param("driverId") Long driverId);
+
+    // Новый метод для поиска заказов без водителя
+    @Query("SELECT o FROM Order o WHERE o.driver IS NULL AND o.status = 'CREATED'")
+    List<Order> findUnassignedOrders();
 }

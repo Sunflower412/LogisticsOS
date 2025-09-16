@@ -14,6 +14,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  task:
+    scheduling:
+      enabled: true
+      pool:
+        size: 5
 
 logging:
   level:
