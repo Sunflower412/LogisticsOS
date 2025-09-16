@@ -42,7 +42,6 @@ public class DelaysNotificationService {
         long minutesRemaining = timeRemaining.toMinutes();
 
         // Если осталось меньше времени чем нужно на доставку + 30% запаса
-        // Здесь должна быть более сложная логика расчета времени доставки
         return minutesRemaining < 90; // Эмпирическое значение
     }
 
@@ -58,4 +57,17 @@ public class DelaysNotificationService {
 
         dispatcherService.sendNotification(message);
     }
+
+    // Проверяем заказы без водителей каждые 10 минут
+    @Scheduled(fixedRate = 10 * 60 * 1000)
+    public void checkUnassignedOrders() {
+        List<Order> unassignedOrders = orderRepository.findByStatus(OrderStatus.CREATED);
+
+        if (!unassignedOrders.isEmpty()) {
+            String message = String.format("Обнаружено %d нераспределенных заказов. Требуется назначение водителей.",
+                    unassignedOrders.size());
+            dispatcherService.sendNotification(message);
+        }
+    }
 }
+
