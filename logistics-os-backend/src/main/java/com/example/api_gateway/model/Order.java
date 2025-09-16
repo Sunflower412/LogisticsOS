@@ -15,6 +15,12 @@ public class Order {
 
     private String description;
 
+    // Параметры для расчета рейтинга
+    private Integer complexity;      // d: 1-простая, 3-средняя, 6-сложная
+    private Integer urgency;         // u: 1-не срочная, 3-средняя, 6-срочная
+    private Integer routeLength;     // l: 1-короткий, 2-средний, 3-длинный
+    private Integer delayPenalty;    // f: 0, 100, 500
+
     @Column(name = "from_address", nullable = false)
     private String fromAddress;
 
@@ -27,7 +33,7 @@ public class Order {
     @Column(name = "volume_m3")
     private Double volumeM3;
 
-    private String status = "CREATED";
+    private OrderStatus status = OrderStatus.CREATED;
 
     @ManyToOne
     @JoinColumn(name = "client_id")
@@ -46,8 +52,17 @@ public class Order {
     @Column(name = "duration_time")
     private int durationTime;
 
+    @Column(name = "planned_delivery_time")
+    private LocalDateTime plannedDeliveryTime;
+
+    @Column(name = "actual_delivery_time")
+    private LocalDateTime actualDeliveryTime;
+
     @Column(name = "completedAt")
     private LocalDateTime completedAt = LocalDateTime.now();
+
+    @Column(name = "completed_successfully")
+    private Boolean completedSuccessfully;
 
     public Order() {
     }
@@ -59,7 +74,7 @@ public class Order {
         this.toAddress = toAddress;
         this.weightKg = weightKg;
         this.volumeM3 = volumeM3;
-        this.status = status;
+        this.status = OrderStatus.valueOf(status);
         this.client = client;
         this.driver = driver;
         this.createdAt = createdAt;
@@ -115,13 +130,7 @@ public class Order {
         this.volumeM3 = volumeM3;
     }
 
-    public String getStatus() {
-        return status;
-    }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public Client getClient() {
         return client;
@@ -170,5 +179,73 @@ public class Order {
 
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public boolean getCompletedSuccessfully() {
+        return completedSuccessfully;
+    }
+
+    public void setCompletedSuccessfully(boolean completedSuccessfully) {
+        this.completedSuccessfully = completedSuccessfully;
+    }
+
+    public LocalDateTime getPlannedDeliveryTime() {
+        return plannedDeliveryTime;
+    }
+
+    public void setPlannedDeliveryTime(LocalDateTime plannedDeliveryTime) {
+        this.plannedDeliveryTime = plannedDeliveryTime;
+    }
+
+    public LocalDateTime getActualDeliveryTime() {
+        return actualDeliveryTime;
+    }
+
+    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
+        this.actualDeliveryTime = actualDeliveryTime;
+    }
+
+    public Integer getComplexity() {
+        return complexity;
+    }
+
+    public void setComplexity(Integer complexity) {
+        this.complexity = complexity;
+    }
+
+    public Integer getUrgency() {
+        return urgency;
+    }
+
+    public void setUrgency(Integer urgency) {
+        this.urgency = urgency;
+    }
+
+    public Integer getRouteLength() {
+        return routeLength;
+    }
+
+    public void setRouteLength(Integer routeLength) {
+        this.routeLength = routeLength;
+    }
+
+    public Integer getDelayPenalty() {
+        return delayPenalty;
+    }
+
+    public void setDelayPenalty(Integer delayPenalty) {
+        this.delayPenalty = delayPenalty;
+    }
+
+    public void setCompletedSuccessfully(Boolean completedSuccessfully) {
+        this.completedSuccessfully = completedSuccessfully;
     }
 }
