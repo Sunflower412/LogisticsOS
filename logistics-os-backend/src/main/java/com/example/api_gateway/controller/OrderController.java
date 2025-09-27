@@ -25,12 +25,23 @@ public class OrderController {
 
     @GetMapping
     public List<Order> getAllOrders() {
+        return orderService.getAllOrders();
+    }
+
+    @GetMapping("/active")
+    public List<Order> getActiveOrders() {
         return orderService.getActiveOrders();
     }
 
     @GetMapping("/status/{status}")
-    public List<Order> getOrdersByStatus(@PathVariable String status) {
-        return orderService.getOrdersByStatus(OrderStatus.valueOf(status));
+    public ResponseEntity<?> getOrdersByStatus(@PathVariable String status) {
+        try {
+            OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            List<Order> orders = orderService.getOrdersByStatus(orderStatus);
+            return ResponseEntity.ok(orders);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid status: " + status);
+        }
     }
 
     @GetMapping("/driver/{driverId}")
@@ -38,31 +49,90 @@ public class OrderController {
         return orderService.getDriversOrders(driverId);
     }
 
+    // Основной метод создания заказа
     @PostMapping
-    public Order createOrder(@RequestBody Order order) {
-        return orderService.createOrder(order);
+    public ResponseEntity<?> createOrder(@RequestBody Order order) {
+        try {
+            Order createdOrder = orderService.createOrder(order);
+            return ResponseEntity.ok(createdOrder);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating order: " + e.getMessage());
+        }
     }
 
+    // Простое назначение заказа (меняет статус на ASSIGNED)
     @PostMapping("/{orderId}/assign")
     public ResponseEntity<String> assignOrder(@PathVariable Long orderId) {
         try {
-            Order order = orderService.updateOrderStatus(orderId, "ASSIGNED");
+            Order order = orderService.updateOrderStatus(orderId, OrderStatus.ASSIGNED);
             return ResponseEntity.ok("Order assigned successfully");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
+    // Назначение конкретного водителя на заказ
+    @PostMapping("/{orderId}/assign-driver")
+    public ResponseEntity<String> assignDriverToOrder(
+            @PathVariable Long orderId,
+            @RequestParam Long driverId) {
+        try {
+            Order order = orderService.assignDriverToOrder(orderId, driverId);
+            return ResponseEntity.ok("Driver assigned successfully to order");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // Завершение заказа через параметры URL
     @PostMapping("/{orderId}/complete")
     public ResponseEntity<String> completeOrder(
             @PathVariable Long orderId,
             @RequestParam boolean success,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime actualDeliveryTime) {
 
+        System.out.println("✅ Received completion request for order: " + orderId);
+        System.out.println("Success: " + success);
+        System.out.println("Actual delivery time: " + actualDeliveryTime);
+
         try {
-            orderService.completeOrder(orderId, success, actualDeliveryTime);
+            // Если время не указано, используем текущее
+            LocalDateTime deliveryTime = actualDeliveryTime != null ?
+                    actualDeliveryTime : LocalDateTime.now();
+
+            Order completedOrder = orderService.completeOrder(orderId, success, deliveryTime);
             return ResponseEntity.ok("Order completed successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // Обновление статуса заказа
+    @PostMapping("/{orderId}/status")
+    public ResponseEntity<String> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam String status) {
+        try {
+            OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            Order order = orderService.updateOrderStatus(orderId, orderStatus);
+            return ResponseEntity.ok("Order status updated to: " + status);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Invalid status: " + status);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // Провал заказа с причиной
+    @PostMapping("/{orderId}/fail")
+    public ResponseEntity<String> failOrder(
+            @PathVariable Long orderId,
+            @RequestParam String reason) {
+        try {
+            Order failedOrder = orderService.failOrder(orderId, reason);
+            return ResponseEntity.ok("Order failed: " + reason);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
@@ -70,7 +140,28 @@ public class OrderController {
 
     @GetMapping("/{orderId}/suggest-driver")
     public ResponseEntity<Long> suggestDriver(@PathVariable Long orderId) {
-        // Заглушка - будет интегрировано с маршрутизацией
-        return ResponseEntity.ok(1L); // Возвращаем ID первого водителя
+        try {
+            // Заглушка - можно добавить логику выбора водителя
+            return ResponseEntity.ok(1L);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(-1L);
+        }
+    }
+
+    // Дополнительные GET методы
+    @GetMapping("/{orderId}")
+    public ResponseEntity<?> getOrderById(@PathVariable Long orderId) {
+        try {
+            Order order = orderService.getOrderById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/completed")
+    public List<Order> getCompletedOrders() {
+        return orderService.getCompletedOrders();
     }
 }

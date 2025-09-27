@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface DriverRepository extends JpaRepository<Driver, Long> {
 
-    List<Driver> findByActivityTrue();
+
 
     List<Driver> findByRatingAllTimeGreaterThanEqual(BigDecimal minRating);
 
@@ -22,4 +22,20 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
     @Query("SELECT d FROM Driver d ORDER BY d.completedOrdersAllTime DESC")
     List<Driver> findTopDrivers();
+
+    List<Driver> findByActiveTrue();
+
+    // Находим активных водителей с рейтингом выше указанного
+    List<Driver> findByActiveTrueAndRatingMonthlyGreaterThanEqual(BigDecimal minRating);
+
+    // Находим активных водителей с рейтингом за все время выше указанного
+    List<Driver> findByActiveTrueAndRatingAllTimeGreaterThanEqual(BigDecimal minRating);
+
+    // Подсчет активных водителей с хорошим рейтингом
+    @Query("SELECT COUNT(d) FROM Driver d WHERE d.active = true AND d.ratingMonthly >= :minRating")
+    long countByActiveTrueAndRatingMonthlyGreaterThanEqual(@Param("minRating") BigDecimal minRating);
+
+    // Находим водителей ближайших к локации (заглушка для будущей реализации)
+    @Query("SELECT d FROM Driver d WHERE d.active = true ORDER BY d.ratingMonthly DESC")
+    List<Driver> findTopDriversByRating();
 }

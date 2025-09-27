@@ -84,7 +84,7 @@ public class DispatcherService {
      * Поиск доступных водителей для заказа
      */
     public List<Driver> findAvailableDrivers() {
-        return driverRepository.findByActivityTrue();
+        return driverRepository.findByActiveTrue();
     }
 
     /**

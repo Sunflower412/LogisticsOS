@@ -10,6 +10,22 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - logistics-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: logistics-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - logistics-network
 
   api-gateway:
     build:
@@ -24,9 +40,21 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL-AUTO: create-drop
       SPRING_JPA_SHOW-SQL: "true"
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: admin
+      SPRING_RABBITMQ_PASSWORD: password
     depends_on:
       - postgres
+      - rabbitmq
     restart: on-failure
+    networks:
+      - logistics-network
+
+networks:
+  logistics-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+  rabbitmq_data:

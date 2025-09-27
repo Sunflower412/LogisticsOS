@@ -153,7 +153,7 @@ public class DriverRatingService {
 
     // Метод для получения подходящего водителя для заказа
     public Driver findSuitableDriver(Order order) {
-        List<Driver> activeDrivers = driverRepository.findByActivityTrue();
+        List<Driver> activeDrivers = driverRepository.findByActiveTrue();
 
         return activeDrivers.stream()
                 .max((d1, d2) -> {
