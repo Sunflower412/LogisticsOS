@@ -1,5 +1,6 @@
 package com.example.api_gateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.aspectj.weaver.ast.Or;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "drivers")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Driver {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

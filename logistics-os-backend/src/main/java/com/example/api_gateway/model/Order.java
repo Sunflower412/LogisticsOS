@@ -1,9 +1,8 @@
 package com.example.api_gateway.model;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "orders")
@@ -33,14 +32,17 @@ public class Order {
     @Column(name = "volume_m3")
     private Double volumeM3;
 
+    @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.CREATED;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
+    @JsonIgnoreProperties({"orders", "hibernateLazyInitializer"})
     private Client client;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id")
+    @JsonIgnoreProperties({"orders", "hibernateLazyInitializer"})
     private Driver driver;
 
     @Column(name = "created_at")
@@ -50,7 +52,7 @@ public class Order {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Column(name = "duration_time")
-    private int durationTime;
+    private Integer durationTime;
 
     @Column(name = "planned_delivery_time")
     private LocalDateTime plannedDeliveryTime;
@@ -58,191 +60,84 @@ public class Order {
     @Column(name = "actual_delivery_time")
     private LocalDateTime actualDeliveryTime;
 
-    @Column(name = "completedAt")
-    private LocalDateTime completedAt = LocalDateTime.now();
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "completed_successfully")
     private Boolean completedSuccessfully;
 
+    // Конструкторы
     public Order() {
     }
 
-    public Order(Long id, String description, String fromAddress, String toAddress, Double weightKg, Double volumeM3, String status, Client client, Driver driver, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.description = description;
-        this.fromAddress = fromAddress;
-        this.toAddress = toAddress;
-        this.weightKg = weightKg;
-        this.volumeM3 = volumeM3;
-        this.status = OrderStatus.valueOf(status);
-        this.client = client;
-        this.driver = driver;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
+    // Удали сложный конструктор или добавь @JsonCreator если нужен
 
+    // Геттеры и сеттеры
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getComplexity() { return complexity; }
+    public void setComplexity(Integer complexity) { this.complexity = complexity; }
 
-    public String getDescription() {
-        return description;
-    }
+    public Integer getUrgency() { return urgency; }
+    public void setUrgency(Integer urgency) { this.urgency = urgency; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public Integer getRouteLength() { return routeLength; }
+    public void setRouteLength(Integer routeLength) { this.routeLength = routeLength; }
 
-    public String getFromAddress() {
-        return fromAddress;
-    }
+    public Integer getDelayPenalty() { return delayPenalty; }
+    public void setDelayPenalty(Integer delayPenalty) { this.delayPenalty = delayPenalty; }
 
-    public void setFromAddress(String fromAddress) {
-        this.fromAddress = fromAddress;
-    }
+    public String getFromAddress() { return fromAddress; }
+    public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
 
-    public String getToAddress() {
-        return toAddress;
-    }
+    public String getToAddress() { return toAddress; }
+    public void setToAddress(String toAddress) { this.toAddress = toAddress; }
 
-    public void setToAddress(String toAddress) {
-        this.toAddress = toAddress;
-    }
+    public Double getWeightKg() { return weightKg; }
+    public void setWeightKg(Double weightKg) { this.weightKg = weightKg; }
 
-    public Double getWeightKg() {
-        return weightKg;
-    }
+    public Double getVolumeM3() { return volumeM3; }
+    public void setVolumeM3(Double volumeM3) { this.volumeM3 = volumeM3; }
 
-    public void setWeightKg(Double weightKg) {
-        this.weightKg = weightKg;
-    }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 
-    public Double getVolumeM3() {
-        return volumeM3;
-    }
+    public Client getClient() { return client; }
+    public void setClient(Client client) { this.client = client; }
 
-    public void setVolumeM3(Double volumeM3) {
-        this.volumeM3 = volumeM3;
-    }
+    public Driver getDriver() { return driver; }
+    public void setDriver(Driver driver) { this.driver = driver; }
 
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public Client getClient() {
-        return client;
-    }
+    public Integer getDurationTime() { return durationTime; }
+    public void setDurationTime(Integer durationTime) { this.durationTime = durationTime; }
 
-    public void setClient(Client client) {
-        this.client = client;
-    }
+    public LocalDateTime getPlannedDeliveryTime() { return plannedDeliveryTime; }
+    public void setPlannedDeliveryTime(LocalDateTime plannedDeliveryTime) { this.plannedDeliveryTime = plannedDeliveryTime; }
 
-    public Driver getDriver() {
-        return driver;
-    }
+    public LocalDateTime getActualDeliveryTime() { return actualDeliveryTime; }
+    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) { this.actualDeliveryTime = actualDeliveryTime; }
 
-    public void setDriver(Driver driver) {
-        this.driver = driver;
-    }
+    public LocalDateTime getCompletedAt() { return completedAt; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public int getDurationTime() {
-        return durationTime;
-    }
-
-    public void setDurationTime(int durationTime) {
-        this.durationTime = durationTime;
-    }
-
-
-    public LocalDateTime getCompletedAt() {
-        return completedAt;
-    }
-
-    public void setCompletedAt(LocalDateTime completedAt) {
-        this.completedAt = completedAt;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public boolean getCompletedSuccessfully() {
+    // Исправленный геттер для Boolean
+    public Boolean getCompletedSuccessfully() {
         return completedSuccessfully;
     }
 
-    public void setCompletedSuccessfully(boolean completedSuccessfully) {
-        this.completedSuccessfully = completedSuccessfully;
-    }
-
-    public LocalDateTime getPlannedDeliveryTime() {
-        return plannedDeliveryTime;
-    }
-
-    public void setPlannedDeliveryTime(LocalDateTime plannedDeliveryTime) {
-        this.plannedDeliveryTime = plannedDeliveryTime;
-    }
-
-    public LocalDateTime getActualDeliveryTime() {
-        return actualDeliveryTime;
-    }
-
-    public void setActualDeliveryTime(LocalDateTime actualDeliveryTime) {
-        this.actualDeliveryTime = actualDeliveryTime;
-    }
-
-    public Integer getComplexity() {
-        return complexity;
-    }
-
-    public void setComplexity(Integer complexity) {
-        this.complexity = complexity;
-    }
-
-    public Integer getUrgency() {
-        return urgency;
-    }
-
-    public void setUrgency(Integer urgency) {
-        this.urgency = urgency;
-    }
-
-    public Integer getRouteLength() {
-        return routeLength;
-    }
-
-    public void setRouteLength(Integer routeLength) {
-        this.routeLength = routeLength;
-    }
-
-    public Integer getDelayPenalty() {
-        return delayPenalty;
-    }
-
-    public void setDelayPenalty(Integer delayPenalty) {
-        this.delayPenalty = delayPenalty;
+    // Старый геттер для обратной совместимости (можно удалить если не используется)
+    public boolean isCompletedSuccessfully() {
+        return Boolean.TRUE.equals(completedSuccessfully);
     }
 
     public void setCompletedSuccessfully(Boolean completedSuccessfully) {
