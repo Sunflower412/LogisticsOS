@@ -1,9 +1,11 @@
 package com.example.api_gateway.controller;
 
+import com.example.api_gateway.dto.OrderDTO;
 import com.example.api_gateway.model.Order;
 import com.example.api_gateway.model.OrderStatus;
 import com.example.api_gateway.services.OrderService;
 import com.example.api_gateway.services.RoutingService;
+import com.example.api_gateway.util.MapperUtil;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping(value = "/api/orders", produces = "application/json")
 public class OrderController {
 
     private final OrderService orderService;
@@ -24,8 +26,10 @@ public class OrderController {
     }
 
     @GetMapping
-    public List<Order> getAllOrders() {
-        return orderService.getAllOrders();
+    public List<OrderDTO> getAllOrders() {
+        return orderService.getAllOrders().stream()
+                .map(MapperUtil::toOrderDTO)
+                .toList();
     }
 
     @GetMapping("/active")
@@ -60,16 +64,6 @@ public class OrderController {
         }
     }
 
-    // Простое назначение заказа (меняет статус на ASSIGNED)
-    @PostMapping("/{orderId}/assign")
-    public ResponseEntity<String> assignOrder(@PathVariable Long orderId) {
-        try {
-            Order order = orderService.updateOrderStatus(orderId, OrderStatus.ASSIGNED);
-            return ResponseEntity.ok("Order assigned successfully");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
-    }
 
     // Назначение конкретного водителя на заказ
     @PostMapping("/{orderId}/assign-driver")
@@ -151,13 +145,10 @@ public class OrderController {
     // Дополнительные GET методы
     @GetMapping("/{orderId}")
     public ResponseEntity<?> getOrderById(@PathVariable Long orderId) {
-        try {
-            Order order = orderService.getOrderById(orderId)
-                    .orElseThrow(() -> new RuntimeException("Order not found"));
-            return ResponseEntity.ok(order);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
+        return orderService.getOrderById(orderId)
+                .map(MapperUtil::toOrderDTO)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/completed")

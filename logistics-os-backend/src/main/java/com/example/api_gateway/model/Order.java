@@ -1,5 +1,6 @@
 package com.example.api_gateway.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -42,7 +43,7 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id")
-    @JsonIgnoreProperties({"orders", "hibernateLazyInitializer"})
+    @JsonBackReference
     private Driver driver;
 
     @Column(name = "created_at")

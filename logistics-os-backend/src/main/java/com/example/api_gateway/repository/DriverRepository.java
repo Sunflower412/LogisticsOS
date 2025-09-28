@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface DriverRepository extends JpaRepository<Driver, Long> {
 
@@ -22,6 +23,10 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
 
     @Query("SELECT d FROM Driver d ORDER BY d.completedOrdersAllTime DESC")
     List<Driver> findTopDrivers();
+
+    @Query("SELECT d FROM Driver d LEFT JOIN FETCH d.orders")
+    List<Driver> findAllWithOrders();
+
 
     List<Driver> findByActiveTrue();
 

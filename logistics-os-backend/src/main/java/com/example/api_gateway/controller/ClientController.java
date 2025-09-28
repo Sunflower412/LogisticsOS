@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/clients")
+@RequestMapping(value = "/api/clients", produces = "application/json")
 public class ClientController {
 
     private final ClientRepository clientRepository;
