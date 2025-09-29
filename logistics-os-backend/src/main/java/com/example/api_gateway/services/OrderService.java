@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,8 +21,7 @@ public class OrderService {
     private final DriverRatingService driverRatingService;
     private final RabbitMQService rabbitMQService;
 
-    public OrderService(OrderRepository orderRepository,
-                        DriverRepository driverRepository,
+    public OrderService(OrderRepository orderRepository, DriverRepository driverRepository,
                         DriverRatingService driverRatingService,
                         RabbitMQService rabbitMQService) {
         this.orderRepository = orderRepository;
@@ -30,8 +30,13 @@ public class OrderService {
         this.rabbitMQService = rabbitMQService;
     }
 
-    /* ---------------------- Read methods ---------------------- */
+    // Существующие методы...
 
+    // Добавляем недостающие методы
+
+    /**
+     * Получить все активные заказы (CREATED, ASSIGNED, IN_PROGRESS)
+     */
     public List<Order> getActiveOrders() {
         return orderRepository.findByStatusIn(List.of(
                 OrderStatus.CREATED,
@@ -40,131 +45,95 @@ public class OrderService {
         ));
     }
 
+    /**
+     * Получить заказы по статусу
+     */
     public List<Order> getOrdersByStatus(OrderStatus status) {
         return orderRepository.findByStatus(status);
     }
 
+    /**
+     * Получить заказы конкретного водителя
+     */
     public List<Order> getDriversOrders(Long driverId) {
         return orderRepository.findByDriverId(driverId);
     }
 
+    /**
+     * Получить все заказы
+     */
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
 
+    /**
+     * Получить заказ по ID
+     */
     public Optional<Order> getOrderById(Long orderId) {
         return orderRepository.findById(orderId);
     }
 
+    /**
+     * Получить завершенные заказы
+     */
     public List<Order> getCompletedOrders() {
         return orderRepository.findByStatusIn(List.of(OrderStatus.DELIVERED, OrderStatus.FAILED));
     }
 
+    /**
+     * Получить заказы за период
+     */
     public List<Order> getOrdersByPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         return orderRepository.findByCreatedAtBetween(startDate, endDate);
     }
 
+    /**
+     * Получить заказы по клиенту
+     */
     public List<Order> getOrdersByCustomer(String customerPhone) {
+        // Используем JPQL запрос вместо производного метода
         return orderRepository.findByClientPhone(customerPhone);
+
+        // Или альтернатива - получить все и отфильтровать на уровне сервиса
+        // return orderRepository.findAll().stream()
+        //        .filter(order -> order.getClient() != null &&
+        //               customerPhone.equals(order.getClient().getPhone()))
+        //        .collect(Collectors.toList());
     }
 
-    /* ---------------------- Create / Assign ---------------------- */
+    public List<Order> getDriverActiveOrders(Long driverId) {
+        return orderRepository.findByDriverIdAndStatusIn(
+                driverId,
+                Arrays.asList(OrderStatus.ASSIGNED, OrderStatus.IN_PROGRESS)
+        );
+    }
+    public List<Order> getDriverCompletedOrders(Long driverId) {
+        return orderRepository.findByDriverIdAndStatusIn(driverId, List.of(OrderStatus.DELIVERED, OrderStatus.FAILED));
+    }
 
-    /**
-     * Создаёт заказ и пытается автоматически назначить подходящего водителя.
-     * Сохраняем заказ сначала, чтобы получить ID (важно для событий).
-     */
     @Transactional
     public Order createOrder(Order order) {
-        // init
-        LocalDateTime now = LocalDateTime.now();
-        order.setCreatedAt(now);
-        order.setUpdatedAt(now);
+        order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.CREATED);
 
-        // сохраняем заказ чтобы получить id для событий
-        Order saved = orderRepository.save(order);
-
-        // пробуем найти подходящего водителя
-        Driver suitableDriver = driverRatingService.findSuitableDriver(saved);
-
+        // Автоматически назначаем подходящего водителя
+        Driver suitableDriver = driverRatingService.findSuitableDriver(order);
         if (suitableDriver != null) {
-            try {
-                // назначаем и сохраняем снова
-                saved.setDriver(suitableDriver);
-                saved.setStatus(OrderStatus.ASSIGNED);
-                saved.setUpdatedAt(LocalDateTime.now());
+            order.setDriver(suitableDriver);
+            order.setStatus(OrderStatus.ASSIGNED);
 
-                Order finalSaved = orderRepository.save(saved);
-
-                // синхронизируем в памяти коллекцию водителя (не обязательно для БД, но полезно)
-                syncDriverOrdersCollection(suitableDriver, finalSaved);
-
-                // отправляем события
-                rabbitMQService.sendNewOrderEvent(finalSaved.getId());
-                rabbitMQService.sendDriverAssignedEvent(finalSaved.getId(), suitableDriver.getId());
-
-                return finalSaved;
-            } catch (Exception e) {
-                // в случае ошибки логируем через rabbit и возвращаем заказ без назначения
-                rabbitMQService.sendNotification("Ошибка при автоназначении водителя: " + e.getMessage());
-                return saved;
-            }
-        } else {
-            // нет подходящего водителя — отправляем только событие создания
-            rabbitMQService.sendNewOrderEvent(saved.getId());
-            return saved;
+            // Отправляем событие о назначении водителя
+            rabbitMQService.sendDriverAssignedEvent(order.getId(), suitableDriver.getId());
         }
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Отправляем событие о создании нового заказа
+        rabbitMQService.sendNewOrderEvent(savedOrder.getId());
+
+        return orderRepository.save(order);
     }
-
-    /**
-     * Назначает конкретного водителя на заказ.
-     * Проверяет состояние заказа и пригодность водителя.
-     */
-    @Transactional
-    public Order assignDriverToOrder(Long orderId, Long driverId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Заказ не найден: " + orderId));
-
-        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.ASSIGNED) {
-            // можно варьировать условие по логике — сейчас не даём переназначать выполняющиеся/завершённые
-            if (order.getStatus() == OrderStatus.IN_PROGRESS || order.getStatus() == OrderStatus.DELIVERED || order.getStatus() == OrderStatus.FAILED) {
-                throw new RuntimeException("Нельзя назначить водителя для заказа в статусе: " + order.getStatus());
-            }
-        }
-
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Водитель не найден: " + driverId));
-
-        if (!Boolean.TRUE.equals(driver.getActive())) {
-            throw new RuntimeException("Водитель неактивен: " + driver.getFirstname() + " " + driver.getLastName());
-        }
-
-        if (driver.getRatingAllTime() != null && driver.getRatingAllTime().compareTo(BigDecimal.valueOf(2.5)) < 0) {
-            throw new RuntimeException("Рейтинг водителя слишком низкий для назначения");
-        }
-
-        // Выполняем привязку — set на заказ (владелец связи) и синхронизация коллекции у водителя
-        order.setDriver(driver);
-        order.setStatus(OrderStatus.ASSIGNED);
-        order.setUpdatedAt(LocalDateTime.now());
-
-        Order saved = orderRepository.save(order); // сохраняем owner — это обновит FK driver_id
-
-        // синхронизируем коллекцию в памяти, чтобы driver.getOrders() отражал изменение
-        syncDriverOrdersCollection(driver, saved);
-
-        // уведомления/события
-        rabbitMQService.sendDriverAssignedEvent(saved.getId(), driver.getId());
-        rabbitMQService.sendNotification(String.format("✅ Водитель %s %s (рейтинг: %s) назначен на заказ #%d",
-                driver.getFirstname(), driver.getLastName(),
-                driver.getRatingAllTime() != null ? driver.getRatingAllTime().toString() : "N/A",
-                saved.getId()));
-
-        return saved;
-    }
-
-    /* ---------------------- Status updates ---------------------- */
 
     @Transactional
     public Order updateOrderStatus(Long orderId, OrderStatus status) {
@@ -175,14 +144,17 @@ public class OrderService {
         order.setStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
 
-        Order saved = orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
 
+        // Отправляем событие об изменении статуса
         if (oldStatus != status) {
-            rabbitMQService.sendNotification(String.format("Статус заказа #%d изменен: %s → %s",
-                    orderId, oldStatus, status));
+            rabbitMQService.sendNotification(
+                    String.format("Статус заказа #%d изменен: %s → %s",
+                            orderId, oldStatus, status)
+            );
         }
 
-        return saved;
+        return savedOrder;
     }
 
     @Transactional
@@ -195,22 +167,30 @@ public class OrderService {
         order.setStatus(success ? OrderStatus.DELIVERED : OrderStatus.FAILED);
         order.setUpdatedAt(LocalDateTime.now());
 
-        Order saved = orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
 
-        // обновляем рейтинг через сервис
-        driverRatingService.updateDriverRating(saved);
+        // Обновляем рейтинг водителя
+        driverRatingService.updateDriverRating(savedOrder);
 
+        // Отправляем событие о завершении заказа
         if (order.getDriver() != null) {
-            rabbitMQService.sendOrderCompletedEvent(orderId, order.getDriver().getId(), success);
+            rabbitMQService.sendOrderCompletedEvent(
+                    orderId,
+                    order.getDriver().getId(),
+                    success
+            );
         }
 
+        // Уведомление диспетчера
         String resultMessage = success ? "успешно завершен" : "завершен с ошибкой";
-        rabbitMQService.sendNotification(String.format("Заказ #%d %s. Водитель: %s %s",
-                orderId, resultMessage,
-                order.getDriver() != null ? order.getDriver().getFirstname() : "-",
-                order.getDriver() != null ? order.getDriver().getLastName() : "-"));
+        rabbitMQService.sendNotification(
+                String.format("Заказ #%d %s. Водитель: %s %s",
+                        orderId, resultMessage,
+                        order.getDriver().getFirstname(),
+                        order.getDriver().getLastName())
+        );
 
-        return saved;
+        return savedOrder;
     }
 
     @Transactional
@@ -221,35 +201,71 @@ public class OrderService {
         order.setStatus(OrderStatus.FAILED);
         order.setUpdatedAt(LocalDateTime.now());
 
-        Order saved = orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
 
-        driverRatingService.updateDriverRating(saved);
+        // Обновляем рейтинг водителя (штраф за проваленный заказ)
+        driverRatingService.updateDriverRating(savedOrder);
 
-        rabbitMQService.sendNotification(String.format("Заказ #%d провален. Причина: %s", orderId, reason));
+        // Отправляем уведомление о провале заказа
+        rabbitMQService.sendNotification(
+                String.format("Заказ #%d провален. Причина: %s", orderId, reason)
+        );
 
         if (order.getDriver() != null) {
             rabbitMQService.sendOrderCompletedEvent(orderId, order.getDriver().getId(), false);
         }
 
-        return saved;
+        return savedOrder;
     }
 
-    /* ---------------------- Helpers ---------------------- */
+    @Transactional
+    public Order assignDriverToOrder(Long orderId, Long driverId) {
+        try {
+            // Находим заказ
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Заказ не найден: " + orderId));
 
-    /**
-     * Синхронизирует коллекцию orders у Driver в памяти — добавляет заказ если его там нет.
-     * Не производит лишних сохранений (в большинстве случаев не нужен explicit save(driver)).
-     */
-    private void syncDriverOrdersCollection(Driver driver, Order order) {
-        if (driver == null || order == null) return;
-        if (driver.getOrders() == null) {
-            driver.setOrders(List.of(order));
-            return;
-        }
-        boolean contains = driver.getOrders().stream()
-                .anyMatch(o -> o.getId() != null && o.getId().equals(order.getId()));
-        if (!contains) {
-            driver.getOrders().add(order);
+            // Проверяем, что заказ можно назначить
+            if (order.getStatus() != OrderStatus.CREATED) {
+                throw new RuntimeException("Заказ уже назначен или выполняется: " + orderId);
+            }
+
+            // Находим водителя
+            Driver driver = driverRepository.findById(driverId)
+                    .orElseThrow(() -> new RuntimeException("Водитель не найден: " + driverId));
+
+            // Проверяем водителя
+            if (!driver.getActive()) {
+                throw new RuntimeException("Водитель неактивен: " + driver.getFirstname() + " " + driver.getLastName());
+            }
+
+            if (driver.getRatingAllTime().compareTo(new BigDecimal("2.5")) < 0) {
+                throw new RuntimeException("Рейтинг водителя слишком низкий для назначения");
+            }
+
+            // Назначаем водителя
+            order.setDriver(driver);
+            order.setStatus(OrderStatus.ASSIGNED);
+            order.setUpdatedAt(LocalDateTime.now());
+
+            Order savedOrder = orderRepository.save(order);
+
+            // Отправляем уведомления
+            rabbitMQService.sendDriverAssignedEvent(orderId, driverId);
+            rabbitMQService.sendNotification(
+                    String.format("✅ Водитель %s %s (рейтинг: %.2f) назначен на заказ #%d",
+                            driver.getFirstname(),
+                            driver.getLastName(),
+                            driver.getRatingAllTime().doubleValue(),
+                            orderId)
+            );
+
+            return savedOrder;
+
+        } catch (RuntimeException e) {
+            // Логируем ошибку и отправляем уведомление
+            rabbitMQService.sendNotification("❌ Ошибка назначения водителя: " + e.getMessage());
+            throw e;
         }
     }
 }

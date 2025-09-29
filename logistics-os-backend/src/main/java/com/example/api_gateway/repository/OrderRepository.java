@@ -21,9 +21,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Находим заказы по ID водителя
     List<Order> findByDriverId(Long driverId);
+    long countByDriverIdAndStatusIn(Long driverId, List<OrderStatus> statuses);
 
     // УДАЛИТЬ или ЗАКОММЕНТИРОВАТЬ этот метод, т.к. поля customerPhone нет в Order
     // List<Order> findByCustomerPhone(String customerPhone);
+    List<Order> findByDriverIdAndStatusIn(Long driverId, List<OrderStatus> statuses);
 
     // Находим заказы за период
     List<Order> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
@@ -35,6 +37,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Находим последние заказы
     List<Order> findTop10ByOrderByCreatedAtDesc();
+    List<Order> findByStatusOrderByUrgencyDescCreatedAtAsc(OrderStatus status);
+    List<Order> findByStatusInOrderByCreatedAtDesc(List<OrderStatus> statuses);
 
     // Добавим метод для поиска по клиенту (если нужно)
     @Query("SELECT o FROM Order o WHERE o.client.phone = :phone")
