@@ -8,20 +8,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
     "axios": "^1.4.0",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-leaflet": "^4.2.1"
+    "react-leaflet": "^4.2.1",
+    "react-router-dom": "^7.9.3",
+    "vite": "^5.4.20"
   },
   "devDependencies": {
     "@types/react": "^18.2.24",
     "@types/react-dom": "^18.2.8",
+    "@types/react-router-dom": "^5.3.3",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.26",
     "tailwindcss": "^3.4.13",
-    "typescript": "^5.2.2",
-    "vite": "^5.1.0",
-    "@vitejs/plugin-react": "^4.0.0"
+    "typescript": "^5.2.2"
   }
 }
