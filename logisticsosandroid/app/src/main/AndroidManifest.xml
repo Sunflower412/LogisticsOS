@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- В будущем для фонового трекинга:
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    -->
+
+
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+
+        <activity android:name="com.example.logistics_os_android.PointsInfoActivity" android:exported="false"/>
+        <activity android:name="com.example.logistics_os_android.ProfileActivity" android:exported="false"/>
+        <activity android:name="com.example.logistics_os_android.MapActivity" android:exported="false"/>
+        <activity android:name="com.example.logistics_os_android.TasksActivity" android:exported="false"/>
+
+        <activity android:name="com.example.logistics_os_android.RegistrationActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

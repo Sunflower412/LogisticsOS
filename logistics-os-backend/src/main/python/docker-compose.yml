@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: logistics-postgres
+    environment:
+      POSTGRES_DB: logisticsdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+#  api-gateway:
+#    build:
+#      context: ../logistics-os-backend
+#      dockerfile: Dockerfile
+#    container_name: logistics-api
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/logisticsdb
+#      SPRING_DATASOURCE_USERNAME: admin
+#      SPRING_DATASOURCE_PASSWORD: password
+#      SPRING_JPA_HIBERNATE_DDL-AUTO: create-drop
+#      SPRING_JPA_SHOW-SQL: "true"
+#      GRAPHHOPPER_URL: http://graphhopper:8989  # URL для GraphHopper
+#    depends_on:
+#      - postgres
+#      - graphhopper
+#    restart: on-failure
+
+  graphhopper:
+    image: graphhopper/graphhopper:8.0
+    container_name: logistics-graphhopper
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./graphhopper-data:/data
+    environment:
+      GRAPHHOPPER_PREPARE_CH: "true"  # Включает подготовку contraction hierarchies для скорости
+      GRAPHHOPPER_DATA: /data/map.osm.pbf  # Путь к OSM-файлу
+      JAVA_OPTS: "-Xmx512m -Xms512m"  # Ограничение памяти
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  graphhopper-data:
