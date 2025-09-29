@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,6 +99,16 @@ public class OrderService {
         //        .filter(order -> order.getClient() != null &&
         //               customerPhone.equals(order.getClient().getPhone()))
         //        .collect(Collectors.toList());
+    }
+
+    public List<Order> getDriverActiveOrders(Long driverId) {
+        return orderRepository.findByDriverIdAndStatusIn(
+                driverId,
+                Arrays.asList(OrderStatus.ASSIGNED, OrderStatus.IN_PROGRESS)
+        );
+    }
+    public List<Order> getDriverCompletedOrders(Long driverId) {
+        return orderRepository.findByDriverIdAndStatusIn(driverId, List.of(OrderStatus.DELIVERED, OrderStatus.FAILED));
     }
 
     @Transactional

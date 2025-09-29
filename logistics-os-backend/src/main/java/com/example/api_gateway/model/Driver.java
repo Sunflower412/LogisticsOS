@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.aspectj.weaver.ast.Or;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -20,6 +21,7 @@ public class Driver {
 
     @Column(name = "last_name", nullable = false)
     String lastName;
+
 
     @Column(name = "experience_level")
     int experienceLevel;
@@ -37,6 +39,15 @@ public class Driver {
     private Integer completedOrdersMonthly = 0;
     private Integer failedOrdersAllTime = 0;
     private Integer failedOrdersMonthly = 0;
+
+    @Column(name = "last_assigned_at")
+    private java.time.LocalDateTime lastAssignedAt;
+
+    @Column(name = "next_available_at")
+    private java.time.LocalDateTime nextAvailableAt;
+
+    @Column(name = "vehicle_id")
+    private Long vehicleId;
 
     @OneToMany
     @Column(name = "orders")
@@ -71,7 +82,11 @@ public class Driver {
     public void setId(Long id) {
         this.id = id;
     }
+    public java.time.LocalDateTime getNextAvailableAt() { return nextAvailableAt; }
+    public void setNextAvailableAt(java.time.LocalDateTime nextAvailableAt) { this.nextAvailableAt = nextAvailableAt; }
 
+    public Long getVehicleId() { return vehicleId; }
+    public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
     public String getFirstname() {
         return firstname;
     }
@@ -213,5 +228,13 @@ public class Driver {
 
     public void setFailedOrdersMonthly(Integer failedOrdersMonthly) {
         this.failedOrdersMonthly = failedOrdersMonthly;
+    }
+
+    public LocalDateTime getLastAssignedAt() {
+        return lastAssignedAt;
+    }
+
+    public void setLastAssignedAt(LocalDateTime lastAssignedAt) {
+        this.lastAssignedAt = lastAssignedAt;
     }
 }

@@ -91,10 +91,10 @@ public class Order {
     public Integer getDelayPenalty() { return delayPenalty; }
     public void setDelayPenalty(Integer delayPenalty) { this.delayPenalty = delayPenalty; }
 
-    public String getFromAddress() { return fromAddress; }
+    public double[] getFromAddress() { return fromAddress; }
     public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
 
-    public String getToAddress() { return toAddress; }
+    public double[] getToAddress() { return toAddress; }
     public void setToAddress(String toAddress) { this.toAddress = toAddress; }
 
     public Double getWeightKg() { return weightKg; }

@@ -3,6 +3,7 @@ package com.example.api_gateway.controller;
 import com.example.api_gateway.model.Order;
 import com.example.api_gateway.model.OrderStatus;
 import com.example.api_gateway.services.OrderService;
+import com.example.api_gateway.services.RoutingInfo;
 import com.example.api_gateway.services.RoutingService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -57,6 +58,24 @@ public class OrderController {
             return ResponseEntity.ok(createdOrder);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error creating order: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/driver/{driverId}/active")
+    public List<Order> getDriverActiveOrders(@PathVariable Long driverId) {
+        return orderService.getDriverActiveOrders(driverId);
+    }
+
+    // получить маршрут заказа (с фронта или андроида)
+    @GetMapping("/{orderId}/route")
+    public ResponseEntity<?> getOrderRoute(@PathVariable Long orderId) {
+        try {
+            Order order = orderService.getOrderById(orderId)
+                    .orElseThrow(() -> new RuntimeException("Order not found"));
+            RoutingInfo info = routingService.getRoutingInfo(order.getFromAddress(), order.getToAddress());
+            return ResponseEntity.ok(info);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 

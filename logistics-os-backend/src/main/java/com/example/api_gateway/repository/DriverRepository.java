@@ -28,6 +28,7 @@ public interface DriverRepository extends JpaRepository<Driver, Long> {
     // Находим активных водителей с рейтингом выше указанного
     List<Driver> findByActiveTrueAndRatingMonthlyGreaterThanEqual(BigDecimal minRating);
 
+    List<Driver> findByActiveTrueOrderByRatingMonthlyDesc();
     // Находим активных водителей с рейтингом за все время выше указанного
     List<Driver> findByActiveTrueAndRatingAllTimeGreaterThanEqual(BigDecimal minRating);
 
